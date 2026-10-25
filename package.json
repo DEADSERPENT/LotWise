@@ -1,0 +1,13 @@
+{
+  "name": "lotwise",
+  "private": true,
+  "scripts": {
+    "install:all": "npm ci --prefix backend && npm ci --prefix frontend",
+    "db:up": "docker compose up -d db",
+    "db:down": "docker compose down",
+    "typecheck": "npm run typecheck --prefix backend && npm run typecheck --prefix frontend",
+    "lint": "npm run lint --prefix backend && npm run lint --prefix frontend",
+    "test": "npm test --prefix backend && npm test --prefix frontend",
+    "build": "npm run build --prefix backend && npm run build --prefix frontend"
+  }
+}

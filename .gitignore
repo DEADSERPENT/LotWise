@@ -8,3 +8,6 @@ coverage/
 .DS_Store
 playwright-report/
 test-results/
+
+# Generated Prisma client
+backend/src/generated/

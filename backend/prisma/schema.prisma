@@ -1,0 +1,64 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  STAFF
+  ADMIN
+}
+
+enum MovementType {
+  INITIAL_STOCK
+  PURCHASE
+  RESTOCK
+}
+
+model User {
+  id           String              @id @default(uuid())
+  email        String              @unique
+  passwordHash String
+  role         Role                @default(STAFF)
+  createdAt    DateTime            @default(now())
+  movements    InventoryMovement[]
+}
+
+model Vehicle {
+  id           String              @id @default(uuid())
+  make         String
+  model        String
+  category     String
+  /// Integer paise (minor units); never floating point. See docs/api-contract.md.
+  priceInPaise Int
+  quantity     Int
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  /// Set when an admin "deletes" the vehicle; history is preserved.
+  archivedAt   DateTime?
+  movements    InventoryMovement[]
+
+  @@index([make])
+  @@index([category])
+}
+
+/// Append-only ledger of every stock change.
+model InventoryMovement {
+  id             String       @id @default(uuid())
+  vehicleId      String
+  actorUserId    String
+  type           MovementType
+  quantityDelta  Int
+  quantityBefore Int
+  quantityAfter  Int
+  reason         String?
+  createdAt      DateTime     @default(now())
+
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id])
+  actor   User    @relation(fields: [actorUserId], references: [id])
+
+  @@index([vehicleId, createdAt])
+}

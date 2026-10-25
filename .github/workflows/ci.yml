@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: lotwise
+          POSTGRES_PASSWORD: ci-password
+          POSTGRES_DB: lotwise
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U lotwise -d lotwise"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://lotwise:ci-password@localhost:5432/lotwise?schema=public
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+      - run: npm run install:all
+      - run: npx prisma migrate deploy && npx prisma generate
+        working-directory: backend
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build

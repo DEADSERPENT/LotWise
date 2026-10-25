@@ -5,6 +5,7 @@ import { app, signIn } from "../helpers/auth.js";
 import { resetDatabase, seedVehicle } from "../helpers/db.js";
 
 const missingId = "00000000-0000-4000-8000-000000000000";
+const MAX_STOCK = 1_000_000; // the product's stock ceiling, stated here independently of production code
 const stockOf = async (id: string) => (await prisma.vehicle.findUniqueOrThrow({ where: { id } })).quantity;
 type Auth = Record<string, string>;
 const purchase = (id: string, auth: Auth, body: object = { quantity: 1 }) =>
@@ -146,6 +147,29 @@ describe("inventory", () => {
       const car = await seedVehicle({ quantity: 0 });
 
       expect((await restock(car.id, auth)).body.data.vehicle.quantity).toBe(5);
+    });
+
+    it("rejects a restock that would push total stock above the maximum", async () => {
+      const { auth } = await signIn("ADMIN");
+      const car = await seedVehicle({ quantity: MAX_STOCK - 1 });
+
+      const res = await restock(car.id, auth, { quantity: 2 });
+
+      expect(res.status).toBe(409);
+      expect(res.body.error.code).toBe("STOCK_LIMIT_EXCEEDED");
+      expect(await stockOf(car.id)).toBe(MAX_STOCK - 1);
+      expect(await prisma.inventoryMovement.count()).toBe(0);
+    });
+
+    it("allows a restock that lands exactly on the maximum", async () => {
+      const { auth } = await signIn("ADMIN");
+      const car = await seedVehicle({ quantity: MAX_STOCK - 1 });
+
+      const res = await restock(car.id, auth, { quantity: 1 });
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.vehicle.quantity).toBe(MAX_STOCK);
+      expect(await prisma.inventoryMovement.count()).toBe(1);
     });
 
     it.each([

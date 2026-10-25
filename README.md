@@ -8,8 +8,6 @@ A full-stack car dealership inventory system. Staff search the catalogue and rec
 | **Lot map** | **Vehicle panel** |
 | ![Lot map](docs/screenshots/3-lot-map.png) | ![Vehicle panel](docs/screenshots/4-vehicle-panel.png) |
 
-Mobile (375 px): ![Mobile inventory](docs/screenshots/5-mobile.png)
-
 ## Features
 
 - Registration and login with JWT authentication; public registration always creates a `STAFF` account.

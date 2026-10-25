@@ -16,10 +16,13 @@ const toMovement = (m: InventoryMovement) => ({
   createdAt: m.createdAt,
 });
 
+const MAX_STOCK = 1_000_000;
+
 /**
  * The single path for every stock change after creation. One conditional UPDATE
  * both checks and applies the change, so concurrent requests serialize on the row
- * lock and stock can never go negative; the ledger row commits in the same transaction.
+ * lock and stock can never go negative or exceed MAX_STOCK; the ledger row commits
+ * in the same transaction.
  */
 async function adjustStock(vehicleId: string, actorUserId: string, type: MovementType, delta: number, reason?: string) {
   return prisma.$transaction(async (tx) => {
@@ -27,11 +30,16 @@ async function adjustStock(vehicleId: string, actorUserId: string, type: Movemen
       UPDATE "Vehicle"
       SET "quantity" = "quantity" + ${delta}, "updatedAt" = now() AT TIME ZONE 'UTC'
       WHERE "id" = ${vehicleId} AND "archivedAt" IS NULL AND "quantity" + ${delta} >= 0
+        AND (${delta} <= 0 OR "quantity" + ${delta} <= ${MAX_STOCK})
       RETURNING *`;
 
     if (!vehicle) {
       const exists = await tx.vehicle.count({ where: { id: vehicleId, archivedAt: null } });
-      throw exists ? new AppError(409, "INSUFFICIENT_STOCK", "Not enough stock available.") : vehicleNotFound();
+      if (!exists) throw vehicleNotFound();
+      // An increase can only fail on the ceiling; a decrease can only fail on the floor.
+      throw delta > 0
+        ? new AppError(409, "STOCK_LIMIT_EXCEEDED", "Stock cannot exceed the maximum allowed.")
+        : new AppError(409, "INSUFFICIENT_STOCK", "Not enough stock available.");
     }
 
     const movement = await tx.inventoryMovement.create({

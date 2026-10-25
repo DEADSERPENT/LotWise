@@ -1,11 +1,12 @@
 import { Router } from "express";
 import { z } from "zod";
+import { MAX_STOCK } from "../../lib/limits.js";
 import { pagingFields } from "../../lib/pagination.js";
 import { parse } from "../../lib/parse.js";
 import { requireRole } from "../../middleware/auth.js";
 import { listMovements, purchase, restock } from "./inventory.service.js";
 
-const quantity = z.number().int().min(1).max(1_000_000);
+const quantity = z.number().int().min(1).max(MAX_STOCK);
 const purchaseBody = z.strictObject({ quantity });
 const restockBody = z.strictObject({ quantity, reason: z.string().trim().min(1).max(300).optional() });
 const idParam = z.uuid();

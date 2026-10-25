@@ -1,6 +1,7 @@
 import type { InventoryMovement, MovementType, Vehicle } from "../../generated/prisma/client.js";
 import { prisma } from "../../lib/database.js";
 import { AppError, vehicleNotFound } from "../../lib/errors.js";
+import { MAX_STOCK } from "../../lib/limits.js";
 import { pageMeta } from "../../lib/pagination.js";
 import { toVehicle } from "../vehicles/vehicles.service.js";
 
@@ -15,8 +16,6 @@ const toMovement = (m: InventoryMovement) => ({
   reason: m.reason,
   createdAt: m.createdAt,
 });
-
-const MAX_STOCK = 1_000_000;
 
 /**
  * The single path for every stock change after creation. One conditional UPDATE

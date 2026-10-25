@@ -1,5 +1,6 @@
 import { Router, type RequestHandler } from "express";
 import { z } from "zod";
+import { MAX_STOCK } from "../../lib/limits.js";
 import { pagingFields } from "../../lib/pagination.js";
 import { parse } from "../../lib/parse.js";
 import { requireRole } from "../../middleware/auth.js";
@@ -12,7 +13,7 @@ const category = text(40).transform((s) => s.replace(/\s+/g, " ").toUpperCase())
 const price = z.number().int().min(1).max(MAX_PRICE_IN_PAISE);
 
 const details = { make: text(80), model: text(80), category, priceInPaise: price };
-const createBody = z.strictObject({ ...details, quantity: z.number().int().min(0).max(1_000_000) });
+const createBody = z.strictObject({ ...details, quantity: z.number().int().min(0).max(MAX_STOCK) });
 const updateBody = z.strictObject(details); // no quantity: stock changes only via the ledger
 
 const listFields = {

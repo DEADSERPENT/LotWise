@@ -1,0 +1,104 @@
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap");
+@import "tailwindcss";
+
+:root {
+  --bg: #f6f3ec; --surface: #fffefb; --line: #e7e1d5; --fg: #1a1713; --muted: #6b665c;
+  --ink: #17140f; --accent: #d9480f; --accent-fg: #ffffff;
+  --ok: #15803d; --warn: #a16207; --bad: #b42318; --danger: #b42318;
+}
+
+@theme inline {
+  --font-sans: "Manrope", system-ui, sans-serif;
+  --color-bg: var(--bg); --color-surface: var(--surface); --color-line: var(--line);
+  --color-fg: var(--fg); --color-muted: var(--muted); --color-ink: var(--ink);
+  --color-accent: var(--accent); --color-accent-fg: var(--accent-fg);
+  --color-ok: var(--ok); --color-warn: var(--warn); --color-bad: var(--bad); --color-danger: var(--danger);
+}
+
+body {
+  @apply bg-bg font-sans text-[15px] leading-normal text-fg antialiased;
+  background-image: radial-gradient(50rem 24rem at 100% -8%, rgb(217 72 15 / 0.09), transparent);
+  background-attachment: fixed;
+}
+
+@layer components {
+  /* Orange fill = the one primary action. Everything else is the neutral .alt button. */
+  .btn {
+    @apply relative inline-flex h-10 overflow-hidden items-center justify-center gap-2 rounded-lg bg-accent px-4 text-sm font-semibold whitespace-nowrap text-accent-fg transition duration-150;
+    @apply hover:-translate-y-px hover:shadow-[0_6px_16px_-6px_rgb(217_72_15/0.6)] hover:brightness-110 active:translate-y-0 active:scale-[0.97] active:shadow-none;
+    @apply focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent;
+    @apply disabled:translate-y-0 disabled:cursor-not-allowed disabled:bg-line disabled:text-muted disabled:shadow-none disabled:hover:brightness-100 disabled:active:scale-100;
+  }
+  .btn.alt { @apply border border-line bg-surface text-fg shadow-[0_1px_1px_rgb(23_20_15/0.04)] hover:bg-bg hover:shadow-[0_4px_12px_-6px_rgb(23_20_15/0.3)] hover:brightness-100 disabled:bg-bg; }
+  .btn.danger { @apply bg-danger text-white hover:shadow-[0_6px_16px_-6px_rgb(180_35_24/0.6)]; }
+  .label { @apply block text-sm font-semibold text-fg; }
+  .input {
+    @apply mt-1.5 h-11 w-full rounded-lg border border-line bg-surface px-3 text-[15px] font-normal text-fg transition;
+    @apply placeholder:text-muted/70 focus-visible:border-accent focus-visible:shadow-[0_0_0_4px_rgb(217_72_15/0.14)] focus-visible:outline-none;
+  }
+  .card { @apply rounded-2xl border border-line bg-surface shadow-[0_1px_2px_rgb(23_20_15/0.04),0_8px_24px_-16px_rgb(23_20_15/0.18)]; }
+  .pill { @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold; }
+  .pill::before { content: ""; @apply size-1.5 rounded-full bg-current; }
+  .pill.ok { @apply bg-ok/12 text-ok; }
+  .pill.warn { @apply bg-warn/15 text-warn; }
+  .pill.bad { @apply bg-bad/12 text-bad; }
+  /* Low and sold-out dots breathe, drawing the eye to what needs attention. */
+  .pill.warn::before, .pill.bad::before { animation: blink 1.6s ease-in-out infinite; }
+  .shimmer { background: linear-gradient(90deg, var(--line) 25%, color-mix(in srgb, var(--line) 35%, white) 50%, var(--line) 75%); background-size: 200% 100%; animation: shimmer 1.3s linear infinite; }
+}
+
+input[type="number"] { appearance: textfield; }
+input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { appearance: none; }
+
+/* Entrance animations use `backwards` fill, never `both`/`forwards`: a finished transform animation that keeps its fill
+   makes its element the containing block for fixed overlays (modals) inside it, which breaks their centring. */
+.rise { animation: rise 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
+.fade { animation: fade 0.2s ease-out backwards; }
+.pop { animation: pop 0.2s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
+.bay-car { animation: park 0.55s calc(var(--i, 0) * 55ms) cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
+.flash { animation: flash 1.1s ease-out; border-radius: 6px; }
+.grow-x { transform-origin: left; animation: grow 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
+.wheel { transform-box: fill-box; transform-origin: center; }
+tr:hover .wheel, .drive .wheel { animation: spin 0.7s linear infinite; }
+.road { background: repeating-linear-gradient(90deg, rgb(246 243 236 / 0.4) 0 28px, transparent 28px 56px); animation: roll 1s linear infinite; }
+.drive { animation: drive 9s linear infinite; }
+
+@keyframes rise { from { opacity: 0; transform: translateY(12px); } }
+@keyframes fade { from { opacity: 0; } }
+@keyframes pop { from { opacity: 0; transform: translateY(8px) scale(0.96); } }
+@keyframes park { from { opacity: 0; transform: translateX(-26px); } }
+@keyframes shimmer { to { background-position: -200% 0; } }
+@keyframes flash { from { background-color: rgb(217 72 15 / 0.3); } }
+@keyframes blink { 50% { opacity: 0.25; } }
+@keyframes grow { from { transform: scaleX(0); } }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes roll { to { background-position-x: -56px; } }
+@keyframes drive { from { left: -9rem; } to { left: 100%; } }
+
+/* spinner while a button's action is in flight */
+.btn[aria-busy="true"]::after { content: ""; width: 0.9rem; height: 0.9rem; border: 2px solid currentColor; border-right-color: transparent; border-radius: 9999px; animation: spin 0.6s linear infinite; }
+.ripple { position: absolute; border-radius: 9999px; background: rgb(255 255 255 / 0.45); transform: scale(0); animation: ripple 0.6s ease-out forwards; pointer-events: none; }
+.alt .ripple { background: rgb(23 20 15 / 0.12); }
+.bump { animation: bump 0.28s ease-out; }
+.spot { background-image: radial-gradient(240px circle at var(--x, 50%) var(--y, -60%), rgb(217 72 15 / 0.11), transparent 60%); }
+.lift { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.lift:hover { transform: translateY(-3px); box-shadow: 0 16px 32px -20px rgb(23 20 15 / 0.5); }
+/* hover accent bar: an inset shadow on the first cell (a ::before on <tr> would break table layout) */
+.row > :first-child { transition: box-shadow 0.2s ease; }
+.row:hover > :first-child { box-shadow: inset 3px 0 0 var(--accent); }
+.orb { animation: float 14s ease-in-out infinite; }
+.word { display: inline-block; animation: rise 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
+.check path { stroke-dasharray: 24; stroke-dashoffset: 24; animation: draw 0.5s 0.1s ease-out forwards; }
+.slider { transition: transform 0.35s cubic-bezier(0.3, 0.9, 0.3, 1); }
+details[open] > form { animation: rise 0.35s backwards; }
+.logo-slash { display: inline-block; transition: transform 0.3s cubic-bezier(0.3, 0.9, 0.3, 1); }
+*:hover > .logo-slash, .logo-slash:hover { transform: rotate(16deg) scale(1.15); }
+
+@keyframes ripple { to { transform: scale(4); opacity: 0; } }
+@keyframes bump { 40% { transform: scale(1.3); } }
+@keyframes float { 50% { transform: translate(50px, -36px) scale(1.18); } }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after { animation: none !important; transition: none !important; }
+}

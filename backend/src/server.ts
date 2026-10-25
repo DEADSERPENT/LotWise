@@ -1,7 +1,11 @@
 import { createApp } from "./app.js";
+import { env } from "./config/env.js";
+import { disconnectDatabase, pingDatabase } from "./lib/database.js";
 
-const port = Number(process.env.PORT ?? 4000);
-
-createApp().listen(port, () => {
-  console.log(`Lotwise API listening on http://localhost:${port}`);
+const server = createApp({ checkDatabase: pingDatabase }).listen(env.PORT, () => {
+  console.log(`Lotwise API listening on http://localhost:${env.PORT}`);
 });
+
+for (const signal of ["SIGINT", "SIGTERM"] as const) {
+  process.on(signal, () => server.close(() => void disconnectDatabase().then(() => process.exit(0))));
+}
